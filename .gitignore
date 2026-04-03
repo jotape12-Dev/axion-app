@@ -38,6 +38,9 @@ pubspec.lock
 .env
 .env.*
 
+# Claude Code
+CLAUDE.md
+
 # Symbolication related
 app.*.symbols
 
