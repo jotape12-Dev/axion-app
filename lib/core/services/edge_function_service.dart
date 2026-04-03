@@ -22,7 +22,11 @@ class EdgeFunctionService {
         'count': count,
       },
     );
+    debugPrint('[EdgeFn] generate-questions raw response: ${response.data}');
     final data = response.data as Map<String, dynamic>;
+    if (data.containsKey('error')) {
+      throw Exception('generate-questions error: ${data['error']}');
+    }
     return List<String>.from(data['questions'] as List);
   }
 
@@ -71,7 +75,14 @@ class EdgeFunctionService {
         'level': level,
       },
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    if (response.data == null) {
+      throw Exception('generate-report retornou resposta vazia');
+    }
+    final data = Map<String, dynamic>.from(response.data as Map);
+    if (data.containsKey('error')) {
+      throw Exception('generate-report error: ${data['error']}');
+    }
+    return data;
   }
 }
 

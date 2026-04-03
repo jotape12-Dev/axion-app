@@ -13,7 +13,11 @@ serve(async (req) => {
 
   try {
     const { area, level, job_description, count } = await req.json();
-    const geminiKey = Deno.env.get("GOOGLE_AI_API_KEY")!;
+    const geminiKey = Deno.env.get("GOOGLE_AI_API_KEY");
+
+    if (!geminiKey) {
+      throw new Error("GOOGLE_AI_API_KEY secret not configured");
+    }
 
     const prompt = `Você é um entrevistador técnico sênior especialista em ${area}.
 Gere exatamente ${count ?? 7} perguntas de entrevista técnica em português brasileiro.
@@ -25,26 +29,44 @@ Comece com perguntas mais fáceis e aumente a dificuldade gradualmente.
 Responda APENAS com um JSON array de strings, sem markdown, sem texto extra.
 Exemplo: ["Pergunta 1?", "Pergunta 2?"]`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, responseMimeType: "application/json" },
+          generationConfig: { temperature: 0.7 },
         }),
       }
     );
 
-    const data = await response.json();
-    const content = data.candidates[0].content.parts[0].text;
-    const questions: string[] = JSON.parse(content);
+    const data = await geminiResponse.json();
+    console.log("Gemini response status:", geminiResponse.status);
+    console.log("Gemini response data:", JSON.stringify(data));
+
+    if (!geminiResponse.ok) {
+      throw new Error(`Gemini API error ${geminiResponse.status}: ${data?.error?.message ?? JSON.stringify(data)}`);
+    }
+
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error(`Gemini returned no candidates. Full response: ${JSON.stringify(data)}`);
+    }
+
+    const rawText = data.candidates[0]?.content?.parts?.[0]?.text;
+    if (!rawText) {
+      throw new Error(`Gemini candidate has no text. Candidate: ${JSON.stringify(data.candidates[0])}`);
+    }
+
+    // Strip markdown code fences if present (e.g. ```json ... ```)
+    const cleaned = rawText.replace(/```(?:json)?\s*/g, "").replace(/```/g, "").trim();
+    const questions: string[] = JSON.parse(cleaned);
 
     return new Response(JSON.stringify({ questions }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("generate-questions error:", (error as Error).message);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

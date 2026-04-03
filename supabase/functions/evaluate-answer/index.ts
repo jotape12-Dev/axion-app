@@ -28,20 +28,21 @@ Retorne APENAS um JSON com:
 - "feedback": feedback construtivo em 1-2 frases`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, responseMimeType: "application/json" },
+          generationConfig: { temperature: 0.3 },
         }),
       }
     );
 
     const data = await response.json();
-    const content = data.candidates[0].content.parts[0].text;
-    const result = JSON.parse(content);
+    const rawText = data.candidates[0].content.parts[0].text;
+    const cleaned = rawText.replace(/```(?:json)?\s*/g, "").replace(/```/g, "").trim();
+    const result = JSON.parse(cleaned);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

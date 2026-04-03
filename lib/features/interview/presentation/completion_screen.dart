@@ -60,13 +60,13 @@ class _CompletionScreenState extends ConsumerState<CompletionScreen> {
       );
 
       final reportedSession = session.copyWith(
-        overallScore: reportData['overall_score'] as int?,
-        technicalScore: reportData['technical_score'] as int?,
-        clarityScore: reportData['clarity_score'] as int?,
-        fluencyScore: reportData['fluency_score'] as int?,
+        overallScore: (reportData['overall_score'] as num?)?.toInt(),
+        technicalScore: (reportData['technical_score'] as num?)?.toInt(),
+        clarityScore: (reportData['clarity_score'] as num?)?.toInt(),
+        fluencyScore: (reportData['fluency_score'] as num?)?.toInt(),
         actionPlan: reportData['action_plan'] != null
             ? ActionPlan.fromJson(
-                reportData['action_plan'] as Map<String, dynamic>)
+                Map<String, dynamic>.from(reportData['action_plan'] as Map))
             : null,
       );
 

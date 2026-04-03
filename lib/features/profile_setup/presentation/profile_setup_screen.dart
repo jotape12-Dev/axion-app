@@ -26,6 +26,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   void _nextPage() {
     if (_currentStep < 2) {
+      FocusScope.of(context).unfocus();
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,

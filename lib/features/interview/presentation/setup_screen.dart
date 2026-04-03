@@ -130,6 +130,82 @@ class _InterviewSetupScreenState extends ConsumerState<InterviewSetupScreen> {
 
                       const SizedBox(height: 32),
 
+                      // Question Count
+                      const Text(
+                        'Quantidade de Perguntas',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Escolha quantas perguntas você quer responder',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [5, 7, 10].map((count) {
+                          final isSelected = setup.questionCount == count;
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: GestureDetector(
+                                onTap: () => ref
+                                    .read(interviewSetupProvider.notifier)
+                                    .setQuestionCount(count),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.accent.withValues(alpha: 0.12)
+                                        : AppColors.surface,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.accent
+                                          : AppColors.border,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        '$count',
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w700,
+                                          color: isSelected
+                                              ? AppColors.accent
+                                              : AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'perguntas',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isSelected
+                                              ? AppColors.accent
+                                              : AppColors.textTertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: 32),
+
                       // Job Description (optional)
                       const Text(
                         'Descrição da Vaga',

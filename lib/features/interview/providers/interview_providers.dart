@@ -13,23 +13,27 @@ class InterviewSetupState {
   final InterviewArea? selectedArea;
   final SeniorityLevel? selectedLevel;
   final String jobDescription;
+  final int questionCount;
   final bool isValid;
 
   const InterviewSetupState({
     this.selectedArea,
     this.selectedLevel,
     this.jobDescription = '',
+    this.questionCount = 7,
   }) : isValid = selectedArea != null && selectedLevel != null;
 
   InterviewSetupState copyWith({
     InterviewArea? selectedArea,
     SeniorityLevel? selectedLevel,
     String? jobDescription,
+    int? questionCount,
   }) {
     return InterviewSetupState(
       selectedArea: selectedArea ?? this.selectedArea,
       selectedLevel: selectedLevel ?? this.selectedLevel,
       jobDescription: jobDescription ?? this.jobDescription,
+      questionCount: questionCount ?? this.questionCount,
     );
   }
 }
@@ -47,6 +51,10 @@ class InterviewSetupNotifier extends StateNotifier<InterviewSetupState> {
 
   void setJobDescription(String description) {
     state = state.copyWith(jobDescription: description);
+  }
+
+  void setQuestionCount(int count) {
+    state = state.copyWith(questionCount: count);
   }
 
   void reset() {
@@ -128,7 +136,7 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
         _audio = audio,
         super(const ActiveInterviewState());
 
-  Future<void> startInterview(InterviewSession session) async {
+  Future<void> startInterview(InterviewSession session, {int count = 7}) async {
     _answeredQuestions.clear();
 
     state = ActiveInterviewState(
@@ -145,13 +153,10 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
         area: session.area.name,
         level: session.level.name,
         jobDescription: session.jobDescription,
-        count: AppConstants.maxQuestions,
+        count: count,
       );
 
-      final total = questions.length.clamp(
-        AppConstants.minQuestions,
-        AppConstants.maxQuestions,
-      );
+      final total = questions.length.clamp(1, count);
 
       state = state.copyWith(
         questions: questions.take(total).toList(),
@@ -161,9 +166,10 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
       );
 
       await _speakCurrentQuestion();
-    } catch (e) {
-      debugPrint('Error generating questions: $e');
-      // Graceful degradation: end the interview
+    } catch (e, stack) {
+      debugPrint('=== Error generating questions ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack: $stack');
       state = state.copyWith(
         isActive: false,
         phase: InterviewPhase.idle,
@@ -214,6 +220,7 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
     // Evaluate the answer
     int? score;
     String? evaluation;
+    String? idealAnswer;
     try {
       final result = await _edgeFunctions.evaluateAnswer(
         question: state.questions[state.currentQuestionIndex],
@@ -221,8 +228,9 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
         area: state.session!.area.name,
         level: state.session!.level.name,
       );
-      score = result['score'] as int?;
+      score = (result['score'] as num?)?.toInt();
       evaluation = result['evaluation'] as String?;
+      idealAnswer = result['ideal_answer'] as String?;
     } catch (e) {
       debugPrint('Evaluation error: $e');
     }
@@ -234,6 +242,7 @@ class ActiveInterviewNotifier extends StateNotifier<ActiveInterviewState> {
     ).copyWith(
       userAnswerTranscript: transcript,
       score: score,
+      idealAnswer: idealAnswer,
       evaluation: evaluation != null
           ? QuestionEvaluation.fromString(evaluation)
           : null,

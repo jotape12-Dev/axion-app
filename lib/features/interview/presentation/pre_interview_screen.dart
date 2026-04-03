@@ -18,7 +18,8 @@ class PreInterviewScreen extends ConsumerStatefulWidget {
       _PreInterviewScreenState();
 }
 
-class _PreInterviewScreenState extends ConsumerState<PreInterviewScreen> {
+class _PreInterviewScreenState extends ConsumerState<PreInterviewScreen>
+    with WidgetsBindingObserver {
   bool _cameraGranted = false;
   bool _micGranted = false;
   bool _checkingPermissions = true;
@@ -29,7 +30,22 @@ class _PreInterviewScreenState extends ConsumerState<PreInterviewScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check when user returns from iPhone Settings after granting permissions.
+    if (state == AppLifecycleState.resumed && _permissionDenied) {
+      _checkPermissions();
+    }
   }
 
   Future<void> _checkPermissions() async {
@@ -83,7 +99,10 @@ class _PreInterviewScreenState extends ConsumerState<PreInterviewScreen> {
           : setup.jobDescription,
     );
 
-    ref.read(activeInterviewProvider.notifier).startInterview(session);
+    ref.read(activeInterviewProvider.notifier).startInterview(
+          session,
+          count: setup.questionCount,
+        );
     context.go('/interview');
   }
 

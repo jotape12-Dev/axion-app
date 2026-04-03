@@ -84,6 +84,7 @@ class _InterviewScreenState extends ConsumerState<InterviewScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(activeInterviewProvider);
     final audioService = ref.watch(audioServiceProvider);
+    final selectedCount = ref.watch(interviewSetupProvider).questionCount;
 
     // Auto-navigate on finish
     if (state.phase == InterviewPhase.finished && state.session != null) {
@@ -105,7 +106,7 @@ class _InterviewScreenState extends ConsumerState<InterviewScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Pergunta ${state.currentQuestionIndex + 1} de ${state.totalQuestions}',
+                    'Pergunta ${state.currentQuestionIndex + 1} de ${state.totalQuestions > 0 ? state.totalQuestions : selectedCount}',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -165,20 +166,10 @@ class _InterviewScreenState extends ConsumerState<InterviewScreen>
             // Subtitle / AI speech text
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  state.currentSubtitle,
-                  key: ValueKey(
-                      '${state.currentQuestionIndex}-${state.currentSubtitle}'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.6,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+              child: _TypewriterSubtitle(
+                key: ValueKey(state.currentSubtitle),
+                text: state.currentSubtitle,
+                isAnimating: state.phase == InterviewPhase.aiSpeaking,
               ),
             ),
 
@@ -308,6 +299,72 @@ class _InterviewScreenState extends ConsumerState<InterviewScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TypewriterSubtitle extends StatefulWidget {
+  final String text;
+  final bool isAnimating;
+
+  const _TypewriterSubtitle({
+    super.key,
+    required this.text,
+    required this.isAnimating,
+  });
+
+  @override
+  State<_TypewriterSubtitle> createState() => _TypewriterSubtitleState();
+}
+
+class _TypewriterSubtitleState extends State<_TypewriterSubtitle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+    if (widget.isAnimating && widget.text.isNotEmpty) {
+      _startAnimation();
+    } else {
+      _controller.value = 1.0;
+    }
+  }
+
+  void _startAnimation() {
+    _controller.reset();
+    // speech rate 0.45 ≈ 67 wpm → ~1.1 words/sec → ~5.5 chars/sec → ~180ms/char
+    final wordCount = widget.text.split(' ').length;
+    final durationMs = (wordCount / 3.5 * 1000).round().clamp(300, 30000);
+    _controller.duration = Duration(milliseconds: durationMs);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final chars = (_controller.value * widget.text.length).round();
+        final visible = widget.text.substring(0, chars.clamp(0, widget.text.length));
+        return Text(
+          visible,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.6,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w400,
+          ),
+        );
+      },
     );
   }
 }

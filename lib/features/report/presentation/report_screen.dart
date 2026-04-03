@@ -41,13 +41,6 @@ class ReportScreen extends ConsumerWidget {
                 onPressed: () => context.go('/home'),
               ),
               title: const Text('Relatório'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.share_rounded,
-                      color: AppColors.textSecondary),
-                  onPressed: () {},
-                ),
-              ],
             ),
             SliverToBoxAdapter(
               child: Padding(

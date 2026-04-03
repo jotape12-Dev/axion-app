@@ -28,6 +28,7 @@ dependencies:
   # Audio
   flutter_tts: ^4.2.0
   record: ^6.2.0
+  just_audio: ^0.9.42
 
   # UI & Animations
   flutter_animate: ^4.5.2
