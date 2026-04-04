@@ -54,8 +54,16 @@ dev_dependencies:
   json_serializable: ^6.9.4
   riverpod_lint: ^2.6.3
   custom_lint: ^0.7.5
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.jpg"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/

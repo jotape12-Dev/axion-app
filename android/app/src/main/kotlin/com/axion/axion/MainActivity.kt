@@ -1,4 +1,4 @@
-package com.axion.axion
+package com.jotape.axion
 
 import io.flutter.embedding.android.FlutterActivity
 
