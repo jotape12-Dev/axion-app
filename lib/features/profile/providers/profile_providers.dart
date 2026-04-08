@@ -104,6 +104,16 @@ class UserProfileNotifier extends StateNotifier<UserProfile?> {
     state = null;
   }
 
+  Future<void> deleteAccount() async {
+    try {
+      await _db.rpc('delete_user');
+      await signOut();
+    } catch (_) {
+      // Caso ocorra um erro ao tentar deletar usando a RPC
+      rethrow;
+    }
+  }
+
   @override
   void dispose() {
     _authSubscription?.cancel();

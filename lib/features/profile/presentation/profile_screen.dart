@@ -81,6 +81,25 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
+              const SizedBox(height: 16),
+              // Delete Account
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _confirmDeleteAccount(context, ref),
+                  icon: Icon(Icons.delete_forever_rounded,
+                      color: AppColors.error.withValues(alpha: 0.8)),
+                  label: Text(
+                    'Deletar Conta',
+                    style: TextStyle(
+                        color: AppColors.error.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
             ],
           ),
@@ -114,6 +133,40 @@ class ProfileScreen extends ConsumerWidget {
               ref.read(userProfileProvider.notifier).signOut();
             },
             child: const Text('Sair',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Deletar Conta'),
+        content: const Text(
+          'Atenção: Esta ação é irreversível. Todos os seus dados, histórico de entrevistas e perfil serão permanentemente excluídos. Tem certeza que deseja deletar sua conta?',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              // Call the new delete function
+              try {
+                await ref.read(userProfileProvider.notifier).deleteAccount();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erro ao deletar conta: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Deletar',
                 style: TextStyle(color: AppColors.error)),
           ),
         ],

@@ -33,8 +33,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final profile = ref.read(userProfileProvider);
       final location = state.matchedLocation;
 
-      // Profile still loading (null) → allow freely; splash controls initial flow.
-      if (profile == null) return null;
+      // Profile still loading (null)
+      // If we are already on splash, wait. Else (e.g. after logout or account deletion), go to splash.
+      if (profile == null) {
+        if (location == '/') return null;
+        return '/';
+      }
 
       // Onboarding not completed → must go to profile-setup.
       if (!profile.onboardingCompleted) {
